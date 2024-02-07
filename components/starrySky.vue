@@ -121,9 +121,8 @@ onMounted(() => {
           p.pixels[index + 3] = 255
         }
       }
+      p.updatePixels()
     }
-
-    p.updatePixels()
   }, starrySkyEl)
   const dx = 1
   const dy = 1
@@ -137,9 +136,12 @@ onMounted(() => {
       p.loadPixels()
       clouds.forEach((cloud) => {
         const index = (cloud.x + cloud.y * window.innerWidth) * 4
-        p.pixels[index + 0] = p.lerp(cloud.originColor.r, cloud.originColor.r / f, noiseFactors[index])
-        p.pixels[index + 1] = p.lerp(cloud.originColor.g, cloud.originColor.g / f, noiseFactors[index])
-        p.pixels[index + 2] = p.lerp(cloud.originColor.b, cloud.originColor.b / f, noiseFactors[index])
+        const r = cloud.originColor.r * Factors[index]
+        const g = cloud.originColor.g * Factors[index]
+        const b = cloud.originColor.b * Factors[index]
+        p.pixels[index + 0] = p.lerp(r, r / f, noiseFactors[index])
+        p.pixels[index + 1] = p.lerp(g, g / f, noiseFactors[index])
+        p.pixels[index + 2] = p.lerp(b, b / f, noiseFactors[index])
         p.pixels[index + 3] = 255
       })
       p.updatePixels()
@@ -152,9 +154,9 @@ onMounted(() => {
         if (cloud.x >= window.innerWidth)
           cloud.x = 0
         const index = (cloud.x + cloud.y * window.innerWidth) * 4
-        const r = cloud.originColor.r * Factors[index] * noiseFactors[index]
-        const g = cloud.originColor.g * Factors[index] * noiseFactors[index]
-        const b = cloud.originColor.b * Factors[index] * noiseFactors[index]
+        const r = cloud.originColor.r * Factors[index]
+        const g = cloud.originColor.g * Factors[index]
+        const b = cloud.originColor.b * Factors[index]
         p.pixels[index + 0] = p.lerp(r, r / f, noiseFactors[index])
         p.pixels[index + 1] = p.lerp(g, g / f, noiseFactors[index])
         p.pixels[index + 2] = p.lerp(b, b / f, noiseFactors[index])
