@@ -76,7 +76,7 @@ onMounted(() => {
           const a = cal2a(p, x, y * 3, px1, py, px2)
           const dist = p.dist(x, y * 1.5, mid, py)
           const brightnessFactorRound = p.map(dist, 0, maxDist, 1.1, 1)
-          const brightnessFactor = p.map(a, minA, maxA, 1.4, 0.8)
+          const brightnessFactor = p.map(a, minA, maxA, 1.2, 0.8)
 
           const Factor = brightnessFactor * brightnessFactorRound
 
@@ -86,24 +86,26 @@ onMounted(() => {
           // 在计算每个像素的颜色时，使用 Perlin 噪声来调整颜色值
           const noiseFactor = p.noise(x * noiseScale, y * noiseScale, p.frameCount) * weight
 
-          const r = p.map(y, 0, window.innerHeight, 70, 243) * Factor
-          const g = p.map(y, 0, window.innerHeight, 77, 228) * Factor
-          const b = p.map(y, 0, window.innerHeight, 158, 246) * Factor
+          // 242, 230, 247
+          // 55, 71, 159
+          const r = p.map(y, 0, window.innerHeight, 55, 242) * Factor
+          const g = p.map(y, 0, window.innerHeight, 71, 230) * Factor
+          const b = p.map(y, 0, window.innerHeight, 159, 247) * Factor
 
           const f = 1.8
           const cr = p.lerp(r, r / f, noiseFactor)
           const cg = p.lerp(g, g / f, noiseFactor)
           const cb = p.lerp(b, b / f, noiseFactor)
 
-          if (p.pixels[index + 0] !== cr || p.pixels[index + 1] !== cg || p.pixels[index + 2] !== cb) {
+          if (r !== cr || g !== cg || b !== cb) {
             clouds.push({
               x,
               y,
               presentColor: { r: cr, g: cg, b: cb },
               originColor: {
-                r: p.map(y, 0, window.innerHeight, 70, 243),
-                g: p.map(y, 0, window.innerHeight, 77, 228),
-                b: p.map(y, 0, window.innerHeight, 158, 246),
+                r: p.map(y, 0, window.innerHeight, 55, 242),
+                g: p.map(y, 0, window.innerHeight, 71, 230),
+                b: p.map(y, 0, window.innerHeight, 159, 247),
               },
             })
           }
@@ -126,7 +128,7 @@ onMounted(() => {
   }, starrySkyEl)
   const dx = 1
   const dy = 1
-  const f = 1.8
+  const f = 2
   const cloudsCanvas = new P5((p: P5) => {
     p.setup = () => {
       p.createCanvas(window.innerWidth, window.innerHeight / 2, p.WEBGL)
@@ -136,9 +138,15 @@ onMounted(() => {
       p.loadPixels()
       clouds.forEach((cloud) => {
         const index = (cloud.x + cloud.y * window.innerWidth) * 4
-        const r = cloud.originColor.r * Factors[index]
-        const g = cloud.originColor.g * Factors[index]
-        const b = cloud.originColor.b * Factors[index]
+        let r = cloud.originColor.r * Factors[index]
+        let g = cloud.originColor.g * Factors[index]
+        let b = cloud.originColor.b * Factors[index]
+        if (r > 242)
+          r = 242
+        if (g > 230)
+          g = 230
+        if (b > 247)
+          b = 247
         p.pixels[index + 0] = p.lerp(r, r / f, noiseFactors[index])
         p.pixels[index + 1] = p.lerp(g, g / f, noiseFactors[index])
         p.pixels[index + 2] = p.lerp(b, b / f, noiseFactors[index])
@@ -150,19 +158,22 @@ onMounted(() => {
       p.clear()
       p.loadPixels()
       for (const cloud of clouds) {
-        cloud.x += 1
+        cloud.x += 5
         if (cloud.x >= window.innerWidth)
-          cloud.x = 0
+          cloud.x = cloud.x - window.innerWidth
         const index = (cloud.x + cloud.y * window.innerWidth) * 4
-        const r = cloud.originColor.r * Factors[index]
-        const g = cloud.originColor.g * Factors[index]
-        const b = cloud.originColor.b * Factors[index]
+        let r = cloud.originColor.r * Factors[index]
+        let g = cloud.originColor.g * Factors[index]
+        let b = cloud.originColor.b * Factors[index]
+        if (r > 242)
+          r = 242
+        if (g > 230)
+          g = 230
+        if (b > 247)
+          b = 247
         p.pixels[index + 0] = p.lerp(r, r / f, noiseFactors[index])
         p.pixels[index + 1] = p.lerp(g, g / f, noiseFactors[index])
         p.pixels[index + 2] = p.lerp(b, b / f, noiseFactors[index])
-        /* p.pixels[index + 0] = cloud.originColor.r * Factors[index] * noiseFactors[index]
-        p.pixels[index + 1] = cloud.originColor.g * Factors[index] * noiseFactors[index]
-        p.pixels[index + 2] = cloud.originColor.b * Factors[index] * noiseFactors[index] */
         p.pixels[index + 3] = 255
       }
 
