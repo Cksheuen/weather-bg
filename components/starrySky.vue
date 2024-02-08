@@ -2,6 +2,8 @@
 import P5 from 'p5'
 
 const starrySkyEl = $ref<HTMLDivElement | null>(null)
+// const rightCloudEl = $ref<HTMLDivElement | null>(null)
+// const leftCloudEl = $ref<HTMLDivElement | null>(null)
 // const cloudsEl = $ref<HTMLDivElement | null>(null)
 const f = 1.8
 
@@ -186,11 +188,77 @@ onMounted(() => {
       p.updatePixels()
     }
   }, cloudsEl) */
+  /* const rightCloudElCanvas = new P5((p: P5) => {
+    p.setup = () => {
+      p.createCanvas(window.innerWidth, window.innerHeight / 2, p.WEBGL)
+      p.pixelDensity(1)
+      p.loadPixels()
+      for (const cloud of clouds) {
+        const index = (cloud.x + cloud.y * window.innerWidth) * 4
+        let r = cloud.originColor.r * Factors[index]
+        let g = cloud.originColor.g * Factors[index]
+        let b = cloud.originColor.b * Factors[index]
+        if (r > 242)
+          r = 242
+        if (g > 230)
+          g = 230
+        if (b > 247)
+          b = 247
+        p.pixels[index + 0] = p.lerp(r, r / f, cloud.noiseFactor)
+        p.pixels[index + 1] = p.lerp(g, g / f, cloud.noiseFactor)
+        p.pixels[index + 2] = p.lerp(b, b / f, cloud.noiseFactor)
+        p.pixels[index + 3] = 255
+      }
+      p.updatePixels()
+    }
+  }, rightCloudEl)
+  const leftCloudElCanvas = new P5((p: P5) => {
+    p.setup = () => {
+      p.createCanvas(window.innerWidth, window.innerHeight / 2, p.WEBGL)
+      p.pixelDensity(1)
+      p.loadPixels()
+      for (const cloud of clouds) {
+        const index = (cloud.x + cloud.y * window.innerWidth) * 4
+        let r = cloud.originColor.r * Factors[index]
+        let g = cloud.originColor.g * Factors[index]
+        let b = cloud.originColor.b * Factors[index]
+        if (r > 242)
+          r = 242
+        if (g > 230)
+          g = 230
+        if (b > 247)
+          b = 247
+        p.pixels[index + 0] = p.lerp(r, r / f, cloud.parallelFactor)
+        p.pixels[index + 1] = p.lerp(g, g / f, cloud.parallelFactor)
+        p.pixels[index + 2] = p.lerp(b, b / f, cloud.parallelFactor)
+        p.pixels[index + 3] = 255
+      }
+      p.updatePixels()
+    }
+  }, leftCloudEl)
+  let x = 0
+  let y = -window.innerHeight
+  const animate = () => {
+    x++
+    y++
+    if (x >= window.innerWidth)
+      x = -window.innerWidth
+    if (y >= window.innerHeight)
+      y = -window.innerHeight
+    rightCloudEl!.style.transform = `translateX(${x}px)`
+    leftCloudEl!.style.transform = `translateX(${y}px)`
+
+    requestAnimationFrame(animate)
+  }
+
+  requestAnimationFrame(animate) */
 })
 </script>
 
 <template>
   <div ref="starrySkyEl" z-1 />
+  <!-- <div ref="rightCloudEl" z-2 />
+  <div ref="leftCloudEl" z-2 /> -->
   <!-- <div ref="cloudsEl" z-2 /> -->
   <star />
   <!-- <Meteor /> -->
