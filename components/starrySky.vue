@@ -21,6 +21,7 @@ interface Cloud {
   y: number
   presentColor: Color
   originColor: Color
+  noiseFactor: number
 }
 
 interface LineColor {
@@ -107,6 +108,7 @@ onMounted(() => {
                 g: p.map(y, 0, window.innerHeight, 71, 230),
                 b: p.map(y, 0, window.innerHeight, 159, 247),
               },
+              noiseFactor,
             })
           }
           if (x === 0 && y < window.innerHeight / 2)
@@ -147,9 +149,9 @@ onMounted(() => {
           g = 230
         if (b > 247)
           b = 247
-        p.pixels[index + 0] = p.lerp(r, r / f, noiseFactors[index])
-        p.pixels[index + 1] = p.lerp(g, g / f, noiseFactors[index])
-        p.pixels[index + 2] = p.lerp(b, b / f, noiseFactors[index])
+        p.pixels[index + 0] = p.lerp(r, r / f, cloud.noiseFactor)
+        p.pixels[index + 1] = p.lerp(g, g / f, cloud.noiseFactor)
+        p.pixels[index + 2] = p.lerp(b, b / f, cloud.noiseFactor)
         p.pixels[index + 3] = 255
       })
       p.updatePixels()
@@ -157,6 +159,8 @@ onMounted(() => {
     p.draw = () => {
       p.clear()
       p.loadPixels()
+      const i = (clouds[0].x + clouds[0].y * window.innerWidth) * 4
+
       for (const cloud of clouds) {
         cloud.x += 5
         if (cloud.x >= window.innerWidth)
@@ -171,9 +175,9 @@ onMounted(() => {
           g = 230
         if (b > 247)
           b = 247
-        p.pixels[index + 0] = p.lerp(r, r / f, noiseFactors[index])
-        p.pixels[index + 1] = p.lerp(g, g / f, noiseFactors[index])
-        p.pixels[index + 2] = p.lerp(b, b / f, noiseFactors[index])
+        p.pixels[index + 0] = p.lerp(r, r / f, cloud.noiseFactor)
+        p.pixels[index + 1] = p.lerp(g, g / f, cloud.noiseFactor)
+        p.pixels[index + 2] = p.lerp(b, b / f, cloud.noiseFactor)
         p.pixels[index + 3] = 255
       }
 
