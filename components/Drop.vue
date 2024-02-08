@@ -82,5 +82,5 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="canvasContainer" fixed left-0 top-0 />
+  <div ref="canvasContainer" fixed left-0 top-0 z-4 />
 </template>

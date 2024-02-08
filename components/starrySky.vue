@@ -2,8 +2,9 @@
 import P5 from 'p5'
 
 const starrySkyEl = $ref<HTMLDivElement | null>(null)
-const cloudsEl = $ref<HTMLDivElement | null>(null)
-const noiseFactors: number[] = []
+// const cloudsEl = $ref<HTMLDivElement | null>(null)
+const f = 1.8
+
 const Factors: number[] = []
 
 function cal2a(p: P5, x: number, y: number, px1: number, py: number, px2: number) {
@@ -19,23 +20,18 @@ interface Color {
 interface Cloud {
   x: number
   y: number
-  presentColor: Color
   originColor: Color
   noiseFactor: number
-}
-
-interface LineColor {
-  color: Color
-  Factor: number
-  noiseFactor: number
+  parallelFactor: number
+  weight: number
 }
 
 const clouds: Cloud[] = []
-const firstLine: LineColor[] = []
 
 onMounted(() => {
   const height = window.innerHeight
   const width = window.innerWidth
+  const noiseScale = 0.01
   let py: number
   let px1: number
   let px2: number
@@ -72,7 +68,6 @@ onMounted(() => {
       for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
           const index = (x + y * width) * 4
-          const noiseScale = 0.01
 
           const a = cal2a(p, x, y * 3, px1, py, px2)
           const dist = p.dist(x, y * 1.5, mid, py)
@@ -93,31 +88,32 @@ onMounted(() => {
           const g = p.map(y, 0, window.innerHeight, 71, 230) * Factor
           const b = p.map(y, 0, window.innerHeight, 159, 247) * Factor
 
-          const f = 1.8
           const cr = p.lerp(r, r / f, noiseFactor)
           const cg = p.lerp(g, g / f, noiseFactor)
           const cb = p.lerp(b, b / f, noiseFactor)
 
           if (r !== cr || g !== cg || b !== cb) {
+            let parallelFactor
+            if (x === 0) { parallelFactor = noiseFactor }
+            else {
+              const dis = window.innerWidth + 1
+              parallelFactor = p.noise((dis - x) * noiseScale, y * noiseScale, p.frameCount) * weight
+            }
             clouds.push({
               x,
               y,
-              presentColor: { r: cr, g: cg, b: cb },
               originColor: {
                 r: p.map(y, 0, window.innerHeight, 55, 242),
                 g: p.map(y, 0, window.innerHeight, 71, 230),
                 b: p.map(y, 0, window.innerHeight, 159, 247),
               },
               noiseFactor,
+              parallelFactor,
+              weight,
             })
           }
-          if (x === 0 && y < window.innerHeight / 2)
-            firstLine.push({ color: { r: cr, g: cg, b: cb }, Factor, noiseFactor })
-
-          if (y < window.innerHeight / 2) {
-            noiseFactors[index] = noiseFactor
+          if (y < window.innerHeight / 2)
             Factors[index] = Factor
-          }
 
           p.pixels[index + 0] = r
           p.pixels[index + 1] = g
@@ -127,110 +123,84 @@ onMounted(() => {
       }
       p.updatePixels()
     }
+    p.draw = () => {
+      p.loadPixels()
+      for (const cloud of clouds) {
+        cloud.x += 2
+        if (cloud.x >= window.innerWidth) {
+          cloud.x = 0
+          const t = cloud.noiseFactor
+          cloud.noiseFactor = cloud.parallelFactor
+          cloud.parallelFactor = t
+        }
+        const index = (cloud.x + cloud.y * window.innerWidth) * 4
+        let r = cloud.originColor.r * Factors[index]
+        let g = cloud.originColor.g * Factors[index]
+        let b = cloud.originColor.b * Factors[index]
+        if (r > 242)
+          r = 242
+        if (g > 230)
+          g = 230
+        if (b > 247)
+          b = 247
+        p.pixels[index + 0] = p.lerp(r, r / f, cloud.noiseFactor)
+        p.pixels[index + 1] = p.lerp(g, g / f, cloud.noiseFactor)
+        p.pixels[index + 2] = p.lerp(b, b / f, cloud.noiseFactor)
+        p.pixels[index + 3] = 255
+      }
+
+      p.updatePixels()
+    }
   }, starrySkyEl)
-  const dx = 1
-  const dy = 1
-  const f = 2
-  const cloudsCanvas = new P5((p: P5) => {
+  /* const cloudsCanvas = new P5((p: P5) => {
     p.setup = () => {
       p.createCanvas(window.innerWidth, window.innerHeight / 2, p.WEBGL)
       p.pixelDensity(1)
-      p.clear()
-      p.noStroke()
-      p.loadPixels()
-      clouds.forEach((cloud) => {
-        const index = (cloud.x + cloud.y * window.innerWidth) * 4
-        let r = cloud.originColor.r * Factors[index]
-        let g = cloud.originColor.g * Factors[index]
-        let b = cloud.originColor.b * Factors[index]
-        if (r > 242)
-          r = 242
-        if (g > 230)
-          g = 230
-        if (b > 247)
-          b = 247
-        p.pixels[index + 0] = p.lerp(r, r / f, cloud.noiseFactor)
-        p.pixels[index + 1] = p.lerp(g, g / f, cloud.noiseFactor)
-        p.pixels[index + 2] = p.lerp(b, b / f, cloud.noiseFactor)
-        p.pixels[index + 3] = 255
-      })
-      p.updatePixels()
     }
     p.draw = () => {
-      p.clear()
       p.loadPixels()
-      const i = (clouds[0].x + clouds[0].y * window.innerWidth) * 4
-
       for (const cloud of clouds) {
-        cloud.x += 5
-        if (cloud.x >= window.innerWidth)
-          cloud.x = cloud.x - window.innerWidth
-        const index = (cloud.x + cloud.y * window.innerWidth) * 4
-        let r = cloud.originColor.r * Factors[index]
-        let g = cloud.originColor.g * Factors[index]
-        let b = cloud.originColor.b * Factors[index]
-        if (r > 242)
-          r = 242
-        if (g > 230)
-          g = 230
-        if (b > 247)
-          b = 247
-        p.pixels[index + 0] = p.lerp(r, r / f, cloud.noiseFactor)
-        p.pixels[index + 1] = p.lerp(g, g / f, cloud.noiseFactor)
-        p.pixels[index + 2] = p.lerp(b, b / f, cloud.noiseFactor)
-        p.pixels[index + 3] = 255
-      }
-
-      /* for (const cloud of clouds) {
-        cloud.x += 1
-        if (cloud.x > window.innerWidth) {
+        cloud.x += 2
+        if (cloud.x >= window.innerWidth) {
           cloud.x = 0
-          let newR = p.map(cloud.y, 0, window.innerHeight, 70, 243) * firstLine[cloud.y].Factor
-          newR = p.lerp(newR, newR / f, firstLine[cloud.y].noiseFactor)
-          let newG = p.map(cloud.y, 0, window.innerHeight, 77, 228) * firstLine[cloud.y].Factor
-          newG = p.lerp(newG, newG / f, firstLine[cloud.y].noiseFactor)
-          let newB = p.map(cloud.y, 0, window.innerHeight, 158, 246) * firstLine[cloud.y].Factor
-          newB = p.lerp(newB, newB / f, firstLine[cloud.y].noiseFactor)
-          const index = (cloud.x + cloud.y * window.innerWidth) * 4
-          p.pixels[index + 0] = newR
-          p.pixels[index + 1] = newG
-          p.pixels[index + 2] = newB
+          const t = cloud.noiseFactor
+          cloud.noiseFactor = cloud.parallelFactor
+          cloud.parallelFactor = t
         }
         const index = (cloud.x + cloud.y * window.innerWidth) * 4
-        p.pixels[index + 0] = cloud.presentColor.r
-        p.pixels[index + 1] = cloud.presentColor.g
-        p.pixels[index + 2] = cloud.presentColor.b
+        let r = cloud.originColor.r * Factors[index]
+        let g = cloud.originColor.g * Factors[index]
+        let b = cloud.originColor.b * Factors[index]
+        if (r > 242)
+          r = 242
+        if (g > 230)
+          g = 230
+        if (b > 247)
+          b = 247
+        p.pixels[index + 0] = p.lerp(r, r / f, cloud.noiseFactor)
+        p.pixels[index + 1] = p.lerp(g, g / f, cloud.noiseFactor)
+        p.pixels[index + 2] = p.lerp(b, b / f, cloud.noiseFactor)
+        p.pixels[index + 3] = 255
       }
- */
-      p.updatePixels()
-    }
-  }, cloudsEl)
-})
 
-/* const cloudsCanvas = new P5((p: P5) => {
-    p.setup = () => {
-      p.createCanvas(window.innerWidth, window.innerHeight, p.WEBGL)
-      p.pixelDensity(1)
-      p.clear()
-      p.noStroke()
-    }
-    p.draw = () => {
-      p.loadPixels()
-      for (const cloud of clouds) {
-        cloud.x += 1
-        if (cloud.x > window.innerWidth)
-          cloud.x = 0
-        const index = (cloud.x + cloud.y * window.innerWidth) * 4
-        p.pixels[index + 0] = p.lerp(cloud.presentColor.r, cloud.presentColor.r / f, noiseFactors[index])
-        p.pixels[index + 1] = p.lerp(cloud.presentColor.g, cloud.presentColor.g / f, noiseFactors[index])
-        p.pixels[index + 2] = p.lerp(cloud.presentColor.b, cloud.presentColor.b / f, noiseFactors[index])
-      }
       p.updatePixels()
     }
   }, cloudsEl) */
+})
 </script>
 
 <template>
-  <div ref="starrySkyEl" fixed left-0 top-0 z-1 />
-  <div ref="cloudsEl" fixed left-0 top-0 z-2 />
+  <div ref="starrySkyEl" z-1 />
+  <!-- <div ref="cloudsEl" z-2 /> -->
+  <star />
+  <!-- <Meteor /> -->
+  <!-- <Drop weather="rain" /> -->
 </template>
+
+<style>
+div {
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+</style>
